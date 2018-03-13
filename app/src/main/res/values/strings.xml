@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">SwipeTunes</string>
+    <string name="songsButton">Songs</string>
+    <string name="gesturesButton">Gestures</string>
+    <string name="songTitleTextView">Song Title</string>
+    <string name="artistTextView">Artist</string>
 </resources>
