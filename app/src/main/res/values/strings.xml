@@ -4,4 +4,5 @@
     <string name="gesturesButton">Gestures</string>
     <string name="songTitleTextView">Song Title</string>
     <string name="artistTextView">Artist</string>
+    <string name="laura">LAURA</string>
 </resources>
