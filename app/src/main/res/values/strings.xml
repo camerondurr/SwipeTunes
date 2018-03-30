@@ -1,8 +1,12 @@
 <resources>
     <string name="app_name">SwipeTunes</string>
+    <string name="action_exit">Exit</string>
     <string name="songsButton">Songs</string>
     <string name="gesturesButton">Gestures</string>
     <string name="songTitleTextView">Song Title</string>
+    <string name="songArtistTextView">Artist Title</string>
     <string name="artistTextView">Artist</string>
-    <string name="laura">LAURA</string>
+    <string name="title_activity_song">SongActivity</string>
+    <string name="action_fav">favorites</string>
+    <string name="title_activity_main2">Main2Activity</string>
 </resources>
