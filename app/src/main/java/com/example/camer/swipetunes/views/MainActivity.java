@@ -335,12 +335,6 @@ public class MainActivity extends  AppCompatActivity implements
         return result;
     }
 
-    private void clearView() {
-        songTitleTextView.setText("");
-        songArtistTextView.setText("");
-        ivAlbum.setImageResource(R.drawable.song);
-    }
-
     @Override
     public void onLongPress(MotionEvent event)
     {
@@ -398,6 +392,12 @@ public class MainActivity extends  AppCompatActivity implements
         return true;
     }
 
+    private void clearView() {
+        songTitleTextView.setText("Empty list favorites");
+        songArtistTextView.setText("");
+        ivAlbum.setImageResource(R.drawable.song);
+    }
+
     // bar menu
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -408,7 +408,6 @@ public class MainActivity extends  AppCompatActivity implements
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
         int id = item.getItemId();
         switch (id) {
             case R.id.action_fav:
@@ -417,20 +416,18 @@ public class MainActivity extends  AppCompatActivity implements
                     getSong();
                 }
                 else {
+                    Map<String, String> favoritesMap = (Map<String, String>) favorites.getAll();
+                    if (favoritesMap.isEmpty()){
+                        Toast.makeText(this, "Empty song list...", Toast.LENGTH_LONG).show();
+                        return true;
+                    }
                     item.setIcon(AppCompatResources.getDrawable(this,android.R.drawable.star_on));
                     getFavorites();
                 }
-                if (songList.size()==0) {
-                    Toast.makeText(this, "Empty song list...", Toast.LENGTH_LONG).show();
-                    musicSrv.pauseSong();
-                    clearView();
-                }
-                else {
-                    songCurrent = 0;
-                    setShowSong();
-                }
-                isFav = !isFav;
+                songCurrent = 0;
+                setShowSong();
 
+                isFav = !isFav;
         }
         return super.onOptionsItemSelected(item);
     }
