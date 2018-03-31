@@ -225,7 +225,8 @@ public class MainActivity extends  AppCompatActivity implements
             //pass list
             musicSrv.setList(songList);
             musicBound = true;
-            setShowSong();
+            if (!songList.isEmpty())
+                setShowSong();
         }
 
         @Override
