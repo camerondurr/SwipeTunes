@@ -16,8 +16,7 @@ import com.example.camer.swipetunes.model.Song;
 import java.util.ArrayList;
 
 public class MusicService extends Service implements
-        MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
-        MediaPlayer.OnCompletionListener {
+        MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener{
 
     //media player
     private MediaPlayer player;
@@ -46,7 +45,6 @@ public class MusicService extends Service implements
                 PowerManager.PARTIAL_WAKE_LOCK);
         player.setAudioStreamType(AudioManager.STREAM_MUSIC);
         player.setOnPreparedListener(this);
-        player.setOnCompletionListener(this);
         player.setOnErrorListener(this);
     }
 
@@ -73,7 +71,7 @@ public class MusicService extends Service implements
     public void pauseSong() {
         player.pause();
     }
-    public void nopauseSong() {
+    public void startSong() {
         player.start();
     }
 
@@ -87,11 +85,6 @@ public class MusicService extends Service implements
         player.stop();
         player.release();
         return false;
-    }
-
-    @Override
-    public void onCompletion(MediaPlayer mediaPlayer) {
-
     }
 
     @Override
@@ -116,5 +109,9 @@ public class MusicService extends Service implements
         public MusicService getService() {
             return MusicService.this;
         }
+    }
+
+    public MediaPlayer getPlayer() {
+        return player;
     }
 }
