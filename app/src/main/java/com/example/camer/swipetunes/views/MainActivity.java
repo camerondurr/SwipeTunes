@@ -148,7 +148,7 @@ public class MainActivity extends  AppCompatActivity implements
         }
     }
 
-    // button songs
+    // songs button
     private void songsButtonOnClick() {
         Intent intent = new Intent(this, SongActivity.class);
         // Serialized songList for send to SongActivity
@@ -400,7 +400,7 @@ public class MainActivity extends  AppCompatActivity implements
     }
 
     private void clearView() {
-        songTitleTextView.setText("Empty list favorites");
+        songTitleTextView.setText("List of favorites empty");
         songArtistTextView.setText("");
         ivAlbum.setImageResource(R.drawable.song);
     }
