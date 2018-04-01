@@ -39,9 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class MainActivity extends  AppCompatActivity implements
-        GestureDetector.OnGestureListener,
-        GestureDetector.OnDoubleTapListener
+public class MainActivity extends  AppCompatActivity
 {
     private static final int REQUEST_SONG = 0;
     // Song List
@@ -62,14 +60,13 @@ public class MainActivity extends  AppCompatActivity implements
 
     // GestureDetector
     private static final String DEBUG_TAG = "Gestures";
-    private GestureDetectorCompat mDetector;
+    private GestureDetectorCompat gestureDetector;
     private static final int SWIPE_THRESHOLD = 100;
     private static final int SWIPE_VELOCITY_THRESHOLD = 100;
 
     // Media Player
     private boolean isPlaying = false;
     private boolean isFav=false;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,8 +99,111 @@ public class MainActivity extends  AppCompatActivity implements
         });
 
         // Gesture Detector
-        mDetector = new GestureDetectorCompat(this,this);
-        mDetector.setOnDoubleTapListener(this);
+        gestureDetector = new GestureDetectorCompat(this, new MyGestureDetector());
+    }
+
+    // Gesture Detector
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        this.gestureDetector.onTouchEvent(event);
+        return super.onTouchEvent(event);
+    }
+
+    // Gesture Detector
+    class MyGestureDetector extends GestureDetector.SimpleOnGestureListener
+    {
+        private static final String DEBUG_TAG = "Gestures";
+
+        @Override
+        public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY)
+        {
+            if (songList.size()==0){
+                Toast.makeText(MainActivity.this, "Empty song list...", Toast.LENGTH_LONG).show();
+                return false;
+            }
+            Log.d(DEBUG_TAG, "onFling: " + event1.toString() + event2.toString());
+            boolean result = false;
+            try
+            {
+                float diffY = event2.getY() - event1.getY();
+                float diffX = event2.getX() - event1.getX();
+                if (Math.abs(diffX) > Math.abs(diffY))
+                {
+                    if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                        if (diffX > 0)
+                        {
+                            // Right Swipe
+                            Toast.makeText(MainActivity.this, "previous song", Toast.LENGTH_SHORT).show();
+                            songCurrent = songCurrent==0?songList.size()-1:songCurrent-1;
+                        }
+                        else
+                        {
+                            // Left Swipe
+                            Toast.makeText(MainActivity.this, "next song", Toast.LENGTH_SHORT).show();
+                            songCurrent = songCurrent==songList.size()-1?0:songCurrent+1;
+                        }
+                        setShowSong();
+                        result = true;
+                    }
+                }
+                else if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
+                    if (diffY > 0)
+                    {
+                        // Down Swipe
+                        if (!isFav) {
+                            Toast.makeText(MainActivity.this, "save song to favorites", Toast.LENGTH_SHORT).show();
+                            addFavorite();
+                        }
+                    }
+                    else
+                    {
+                        if (isFav){
+                            // Up Swipe
+                            Toast.makeText(MainActivity.this, "remove song to favorites", Toast.LENGTH_SHORT).show();
+                            removeFavorite();
+                            getFavorites();
+                            if (songList.size()>0) {
+                                songCurrent = songCurrent >= songList.size() - 1 ? 0 : songCurrent + 1;
+                                setShowSong();
+                            }
+                            else {
+                                musicSrv.pauseSong();
+                                clearView();
+                            }
+                        }
+                    }
+
+                    result = true;
+                }
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+            return result;
+        }
+
+        @Override
+        public boolean onSingleTapConfirmed(MotionEvent event)
+        {
+            if (songList.size()==0)
+            {
+                Toast.makeText(MainActivity.this, "Empty song list...", Toast.LENGTH_LONG).show();
+                return false;
+            }
+            Log.d(DEBUG_TAG, "onSingleTapConfirmed: " + event.toString());
+            if (isPlaying)
+            {
+                Toast.makeText(MainActivity.this, "pause", Toast.LENGTH_SHORT).show();
+                musicSrv.pauseSong();
+
+            }
+            else
+            {
+                Toast.makeText(MainActivity.this, "play", Toast.LENGTH_SHORT).show();
+                musicSrv.nopauseSong();
+            }
+            isPlaying = !isPlaying;
+            return true;
+        }
     }
 
     // get song list from SharePreferences
@@ -252,145 +352,7 @@ public class MainActivity extends  AppCompatActivity implements
         super.onDestroy();
     }
 
-    // GestureDetector
-    @Override
-    public boolean onTouchEvent(MotionEvent event)
-    {
-        if (this.mDetector.onTouchEvent(event))
-        {
-            return true;
-        }
-        return super.onTouchEvent(event);
-    }
-    @Override
-    public boolean onDown(MotionEvent event)
-    {
-        Log.d(DEBUG_TAG,"onDown: " + event.toString());
-        return true;
-    }
-    @Override
-    public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY)
-    {
-        if (songList.size()==0){
-            Toast.makeText(this, "Empty song list...", Toast.LENGTH_LONG).show();
-            return false;
-        }
-        Log.d(DEBUG_TAG, "onFling: " + event1.toString() + event2.toString());
-        boolean result = false;
-        try
-        {
-            float diffY = event2.getY() - event1.getY();
-            float diffX = event2.getX() - event1.getX();
-            if (Math.abs(diffX) > Math.abs(diffY))
-            {
-                if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
-                    if (diffX > 0)
-                    {
-                        // Right Swipe
-                        Toast.makeText(MainActivity.this, "previous song", Toast.LENGTH_SHORT).show();
-                        songCurrent = songCurrent==0?songList.size()-1:songCurrent-1;
-                    }
-                    else
-                    {
-                        // Left Swipe
-                        Toast.makeText(MainActivity.this, "next song", Toast.LENGTH_SHORT).show();
-                        songCurrent = songCurrent==songList.size()-1?0:songCurrent+1;
-                    }
-                    setShowSong();
-                    result = true;
-                }
-            }
-            else if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
-                if (diffY > 0)
-                {
-                    // Down Swipe
-                    if (!isFav) {
-                        Toast.makeText(MainActivity.this, "save song to favorites", Toast.LENGTH_SHORT).show();
-                        addFavorite();
-                    }
-                }
-                else
-                {
-                    if (isFav){
-                         // Up Swipe
-                        Toast.makeText(MainActivity.this, "remove song to favorites", Toast.LENGTH_SHORT).show();
-                        removeFavorite();
-                        getFavorites();
-                        if (songList.size()>0) {
-                            songCurrent = songCurrent >= songList.size() - 1 ? 0 : songCurrent + 1;
-                            setShowSong();
-                        }
-                        else {
-                            musicSrv.pauseSong();
-                            clearView();
-                        }
-                    }
-                }
 
-                result = true;
-            }
-        } catch (Exception exception) {
-            exception.printStackTrace();
-        }
-        return result;
-    }
-
-    @Override
-    public void onLongPress(MotionEvent event)
-    {
-        Log.d(DEBUG_TAG, "onLongPress: " + event.toString());
-    }
-    @Override
-    public boolean onScroll(MotionEvent event1, MotionEvent event2, float distanceX, float distanceY)
-    {
-        Log.d(DEBUG_TAG, "onScroll: " + event1.toString() + event2.toString());
-        return true;
-    }
-    @Override
-    public void onShowPress(MotionEvent event)
-    {
-        Log.d(DEBUG_TAG, "onShowPress: " + event.toString());
-    }
-    @Override
-    public boolean onSingleTapUp(MotionEvent event)
-    {
-        Log.d(DEBUG_TAG, "onSingleTapUp: " + event.toString());
-        return true;
-    }
-    @Override
-    public boolean onDoubleTap(MotionEvent event)
-    {
-        Log.d(DEBUG_TAG, "onDoubleTap: " + event.toString());
-        return true;
-    }
-    @Override
-    public boolean onDoubleTapEvent(MotionEvent event)
-    {
-        Log.d(DEBUG_TAG, "onDoubleTapEvent: " + event.toString());
-        return true;
-    }
-    @Override
-    public boolean onSingleTapConfirmed(MotionEvent event)
-    {
-        if (songList.size()==0){
-            Toast.makeText(this, "Empty song list...", Toast.LENGTH_LONG).show();
-            return false;
-        }
-        Log.d(DEBUG_TAG, "onSingleTapConfirmed: " + event.toString());
-        if (isPlaying)
-        {
-            Toast.makeText(MainActivity.this, "pause", Toast.LENGTH_SHORT).show();
-            musicSrv.pauseSong();
-
-        }
-        else
-        {
-            Toast.makeText(MainActivity.this, "play", Toast.LENGTH_SHORT).show();
-            musicSrv.nopauseSong();
-        }
-        isPlaying = !isPlaying;
-        return true;
-    }
 
     private void clearView() {
         songTitleTextView.setText("Empty list favorites");
