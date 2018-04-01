@@ -8,5 +8,4 @@
     <string name="artistTextView">Artist</string>
     <string name="title_activity_song">SongActivity</string>
     <string name="action_fav">favorites</string>
-    <string name="title_activity_main2">Main2Activity</string>
 </resources>
