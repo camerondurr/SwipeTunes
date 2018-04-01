@@ -107,7 +107,7 @@ public class MainActivity extends  AppCompatActivity
     public boolean onTouchEvent(MotionEvent event) {
         this.gestureDetector.onTouchEvent(event);
         return super.onTouchEvent(event);
-    }
+    } 
 
     // Gesture Detector
     class MyGestureDetector extends GestureDetector.SimpleOnGestureListener
