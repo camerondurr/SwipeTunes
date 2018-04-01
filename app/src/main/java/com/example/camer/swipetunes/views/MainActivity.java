@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -19,10 +20,10 @@ import android.support.v7.content.res.AppCompatResources;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.GestureDetector;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -39,7 +40,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class MainActivity extends  AppCompatActivity
+public class MainActivity extends  AppCompatActivity implements
+        GestureDetector.OnGestureListener,
+        GestureDetector.OnDoubleTapListener,
+        MediaPlayer.OnCompletionListener
 {
     private static final int REQUEST_SONG = 0;
     // Song List
@@ -60,13 +64,15 @@ public class MainActivity extends  AppCompatActivity
 
     // GestureDetector
     private static final String DEBUG_TAG = "Gestures";
-    private GestureDetectorCompat gestureDetector;
+    private GestureDetectorCompat mDetector;
     private static final int SWIPE_THRESHOLD = 100;
     private static final int SWIPE_VELOCITY_THRESHOLD = 100;
 
     // Media Player
+    private MediaPlayer player;
     private boolean isPlaying = false;
     private boolean isFav=false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +80,7 @@ public class MainActivity extends  AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
 
         songList = new ArrayList();
         typeOfList = new TypeToken<List<Song>>(){}.getType();
@@ -99,111 +106,8 @@ public class MainActivity extends  AppCompatActivity
         });
 
         // Gesture Detector
-        gestureDetector = new GestureDetectorCompat(this, new MyGestureDetector());
-    }
-
-    // Gesture Detector
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        this.gestureDetector.onTouchEvent(event);
-        return super.onTouchEvent(event);
-    } 
-
-    // Gesture Detector
-    class MyGestureDetector extends GestureDetector.SimpleOnGestureListener
-    {
-        private static final String DEBUG_TAG = "Gestures";
-
-        @Override
-        public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY)
-        {
-            if (songList.size()==0){
-                Toast.makeText(MainActivity.this, "Empty song list...", Toast.LENGTH_LONG).show();
-                return false;
-            }
-            Log.d(DEBUG_TAG, "onFling: " + event1.toString() + event2.toString());
-            boolean result = false;
-            try
-            {
-                float diffY = event2.getY() - event1.getY();
-                float diffX = event2.getX() - event1.getX();
-                if (Math.abs(diffX) > Math.abs(diffY))
-                {
-                    if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
-                        if (diffX > 0)
-                        {
-                            // Right Swipe
-                            Toast.makeText(MainActivity.this, "previous song", Toast.LENGTH_SHORT).show();
-                            songCurrent = songCurrent==0?songList.size()-1:songCurrent-1;
-                        }
-                        else
-                        {
-                            // Left Swipe
-                            Toast.makeText(MainActivity.this, "next song", Toast.LENGTH_SHORT).show();
-                            songCurrent = songCurrent==songList.size()-1?0:songCurrent+1;
-                        }
-                        setShowSong();
-                        result = true;
-                    }
-                }
-                else if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
-                    if (diffY > 0)
-                    {
-                        // Down Swipe
-                        if (!isFav) {
-                            Toast.makeText(MainActivity.this, "save song to favorites", Toast.LENGTH_SHORT).show();
-                            addFavorite();
-                        }
-                    }
-                    else
-                    {
-                        if (isFav){
-                            // Up Swipe
-                            Toast.makeText(MainActivity.this, "remove song to favorites", Toast.LENGTH_SHORT).show();
-                            removeFavorite();
-                            getFavorites();
-                            if (songList.size()>0) {
-                                songCurrent = songCurrent >= songList.size() - 1 ? 0 : songCurrent + 1;
-                                setShowSong();
-                            }
-                            else {
-                                musicSrv.pauseSong();
-                                clearView();
-                            }
-                        }
-                    }
-
-                    result = true;
-                }
-            } catch (Exception exception) {
-                exception.printStackTrace();
-            }
-            return result;
-        }
-
-        @Override
-        public boolean onSingleTapConfirmed(MotionEvent event)
-        {
-            if (songList.size()==0)
-            {
-                Toast.makeText(MainActivity.this, "Empty song list...", Toast.LENGTH_LONG).show();
-                return false;
-            }
-            Log.d(DEBUG_TAG, "onSingleTapConfirmed: " + event.toString());
-            if (isPlaying)
-            {
-                Toast.makeText(MainActivity.this, "pause", Toast.LENGTH_SHORT).show();
-                musicSrv.pauseSong();
-
-            }
-            else
-            {
-                Toast.makeText(MainActivity.this, "play", Toast.LENGTH_SHORT).show();
-                musicSrv.nopauseSong();
-            }
-            isPlaying = !isPlaying;
-            return true;
-        }
+        mDetector = new GestureDetectorCompat(this,this);
+        mDetector.setOnDoubleTapListener(this);
     }
 
     // get song list from SharePreferences
@@ -221,16 +125,16 @@ public class MainActivity extends  AppCompatActivity
     private void getSong() {
         songList.clear();
         ContentResolver musicResolver = getContentResolver();
-        Uri musicUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, MediaStore.Audio.Media.TITLE);
         if(musicCursor!=null && musicCursor.moveToFirst()) {
             //get columns
             int titleColumn = musicCursor.getColumnIndex
-                    (MediaStore.Audio.Media.TITLE);
+                    (android.provider.MediaStore.Audio.Media.TITLE);
             int idColumn = musicCursor.getColumnIndex
-                    (MediaStore.Audio.Media._ID);
+                    (android.provider.MediaStore.Audio.Media._ID);
             int artistColumn = musicCursor.getColumnIndex
-                    (MediaStore.Audio.Media.ARTIST);
+                    (android.provider.MediaStore.Audio.Media.ARTIST);
             int albumIdColumn = musicCursor.getColumnIndex
                     (MediaStore.Audio.Media.ALBUM_ID);
             //add songs to list
@@ -256,7 +160,7 @@ public class MainActivity extends  AppCompatActivity
     // return song's position from Song Activity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-         if (resultCode == RESULT_OK){
+        if (resultCode == RESULT_OK){
             if (requestCode == REQUEST_SONG){
                 songCurrent = data.getIntExtra("position",0);
                 Log.d(DEBUG_TAG, "pos:"+songCurrent);
@@ -325,9 +229,10 @@ public class MainActivity extends  AppCompatActivity
             //pass list
             musicSrv.setList(songList);
             musicBound = true;
-            if (!songList.isEmpty()) {
+            player = musicSrv.getPlayer();
+            player.setOnCompletionListener(MainActivity.this);
+            if (!songList.isEmpty())
                 setShowSong();
-            }
         }
 
         @Override
@@ -353,7 +258,146 @@ public class MainActivity extends  AppCompatActivity
         super.onDestroy();
     }
 
+    // GestureDetector
+    @Override
+    public boolean onTouchEvent(MotionEvent event)
+    {
+        if (this.mDetector.onTouchEvent(event))
+        {
+            return true;
+        }
+        return super.onTouchEvent(event);
+    }
+    @Override
+    public boolean onDown(MotionEvent event)
+    {
+        Log.d(DEBUG_TAG,"onDown: " + event.toString());
+        return true;
+    }
+    @Override
+    public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY)
+    {
+        if (songList.size()==0){
+            Toast.makeText(this, "Empty song list...", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        Log.d(DEBUG_TAG, "onFling: " + event1.toString() + event2.toString());
+        boolean result = false;
+        try
+        {
+            float diffY = event2.getY() - event1.getY();
+            float diffX = event2.getX() - event1.getX();
+            if (Math.abs(diffX) > Math.abs(diffY))
+            {
+                if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                    if (diffX > 0)
+                    {
+                        // Right Swipe
+                        Toast.makeText(MainActivity.this, "previous song", Toast.LENGTH_SHORT).show();
+                        songCurrent = songCurrent==0?songList.size()-1:songCurrent-1;
+                    }
+                    else
+                    {
+                        // Left Swipe
+                        Toast.makeText(MainActivity.this, "next song", Toast.LENGTH_SHORT).show();
+                        songCurrent = songCurrent==songList.size()-1?0:songCurrent+1;
+                    }
+                    setShowSong();
+                    result = true;
+                }
+            }
+            else if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
+                if (diffY > 0)
+                {
+                    // Down Swipe
+                    if (!isFav) {
+                        Toast.makeText(MainActivity.this, "save song to favorites", Toast.LENGTH_SHORT).show();
+                        addFavorite();
+                    }
+                }
+                else
+                {
+                    if (isFav){
+                        // Up Swipe
+                        Toast.makeText(MainActivity.this, "remove song to favorites", Toast.LENGTH_SHORT).show();
+                        removeFavorite();
+                        getFavorites();
+                        // next song if not empty
+                        if (songList.size()>0) {
+                            songCurrent = songCurrent >= songList.size() - 1 ? 0 : songCurrent + 1;
+                            setShowSong();
+                        }
+                        else {
+                            musicSrv.pauseSong();
+                            clearView();
+                        }
+                    }
+                }
 
+                result = true;
+            }
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+        return result;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent event)
+    {
+        Log.d(DEBUG_TAG, "onLongPress: " + event.toString());
+    }
+    @Override
+    public boolean onScroll(MotionEvent event1, MotionEvent event2, float distanceX, float distanceY)
+    {
+        Log.d(DEBUG_TAG, "onScroll: " + event1.toString() + event2.toString());
+        return true;
+    }
+    @Override
+    public void onShowPress(MotionEvent event)
+    {
+        Log.d(DEBUG_TAG, "onShowPress: " + event.toString());
+    }
+    @Override
+    public boolean onSingleTapUp(MotionEvent event)
+    {
+        Log.d(DEBUG_TAG, "onSingleTapUp: " + event.toString());
+        return true;
+    }
+    @Override
+    public boolean onDoubleTap(MotionEvent event)
+    {
+        Log.d(DEBUG_TAG, "onDoubleTap: " + event.toString());
+        return true;
+    }
+    @Override
+    public boolean onDoubleTapEvent(MotionEvent event)
+    {
+        Log.d(DEBUG_TAG, "onDoubleTapEvent: " + event.toString());
+        return true;
+    }
+    @Override
+    public boolean onSingleTapConfirmed(MotionEvent event)
+    {
+        if (songList.size()==0){
+            Toast.makeText(this, "Empty song list...", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        Log.d(DEBUG_TAG, "onSingleTapConfirmed: " + event.toString());
+        if (isPlaying)
+        {
+            Toast.makeText(MainActivity.this, "pause", Toast.LENGTH_SHORT).show();
+            musicSrv.pauseSong();
+
+        }
+        else
+        {
+            Toast.makeText(MainActivity.this, "play", Toast.LENGTH_SHORT).show();
+            musicSrv.startSong();
+        }
+        isPlaying = !isPlaying;
+        return true;
+    }
 
     private void clearView() {
         songTitleTextView.setText("Empty list favorites");
@@ -393,5 +437,11 @@ public class MainActivity extends  AppCompatActivity
                 isFav = !isFav;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onCompletion(MediaPlayer mediaPlayer) {
+        songCurrent = songCurrent==songList.size()-1?0:songCurrent+1;
+        setShowSong();
     }
 }
