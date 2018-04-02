@@ -13,10 +13,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <!--
-        android:launchMode="singleTop"
-        no reset activity return with up navigation
-        -->
         <activity
             android:name=".views.MainActivity"
             android:label="@string/app_name"
@@ -25,15 +21,23 @@
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".views.SongActivity"
             android:label="@string/title_activity_song"
             android:parentActivityName=".views.MainActivity"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+
+        <activity
+            android:name=".views.SpeakActivity"
+            android:label="SpeakActivity"
+            android:parentActivityName=".views.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
 
         <service android:name=".services.MusicService" />
 

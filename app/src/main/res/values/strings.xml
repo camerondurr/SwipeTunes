@@ -8,4 +8,6 @@
     <string name="artistTextView">Artist</string>
     <string name="title_activity_song">SongActivity</string>
     <string name="action_fav">favorites</string>
+    <string name="todo">TODO</string>
+    <string name="speak">Speak</string>
 </resources>

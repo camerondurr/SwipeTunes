@@ -44,6 +44,8 @@ public class MainActivity extends  AppCompatActivity implements
         MediaPlayer.OnCompletionListener
 {
     private static final int REQUEST_SONG = 0;
+    private static final int REQUEST_SPEAK = 0;
+
     // Song List
     private ArrayList<Song> songList;
     private Type typeOfList;
@@ -71,7 +73,6 @@ public class MainActivity extends  AppCompatActivity implements
     private boolean isPlaying = false;
     private boolean isFav=false;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -94,13 +95,20 @@ public class MainActivity extends  AppCompatActivity implements
         songTitleTextView = findViewById(R.id.songTitleTextView);
         songArtistTextView = findViewById(R.id.songArtistTextView);
         ivAlbum = findViewById(R.id.ivAlbum);
-        Button songsButton = findViewById(R.id.songsButton);
 
-        // songsButtonOnClick
+        Button songsButton = findViewById(R.id.songsButton);
         songsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 songsButtonOnClick();
+            }
+        });
+
+        final Button speakButton = findViewById(R.id.speakButton);
+        speakButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                speakButtonOnClick();
             }
         });
 
@@ -253,6 +261,12 @@ public class MainActivity extends  AppCompatActivity implements
         startActivityForResult(intent,REQUEST_SONG);
     }
 
+    // speak button
+    private void speakButtonOnClick(){
+        Intent intent = new Intent (this, SpeakActivity.class);
+        startActivityForResult(intent, REQUEST_SPEAK);
+    }
+
     // return song's position from Song Activity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -397,4 +411,6 @@ public class MainActivity extends  AppCompatActivity implements
         songCurrent = songCurrent==songList.size()-1?0:songCurrent+1;
         setShowSong();
     }
+
+
 }
