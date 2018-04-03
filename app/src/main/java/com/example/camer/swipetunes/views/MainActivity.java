@@ -73,7 +73,7 @@ public class MainActivity extends  AppCompatActivity implements
 
     // Media Player
     private MediaPlayer player;
-    private boolean isPlaying = false;
+    public static boolean isPlaying = false;
     private boolean isFav = false;
 
     @Override

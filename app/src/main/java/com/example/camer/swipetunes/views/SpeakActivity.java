@@ -54,10 +54,12 @@ public class SpeakActivity extends AppCompatActivity {
                     if(result.get(0).equals("play"))
                     {
                         MainActivity.musicSrv.startSong();
+                        MainActivity.isPlaying = true;
                     }
                     else {
                         if (result.get(0).equals("pause") || result.get(0).equals("bus") || result.get(0).equals("force") || result.get(0).equals("boss") || result.get(0).equals("false") || result.get(0).equals("Porsche")|| result.get(0).equals("squash")) {
                             MainActivity.musicSrv.pauseSong();
+                            MainActivity.isPlaying = false;
                         }
                     }
                 }
