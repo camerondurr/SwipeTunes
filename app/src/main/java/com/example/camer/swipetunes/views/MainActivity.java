@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.content.res.AppCompatResources;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Display;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -43,8 +45,9 @@ import java.util.Map;
 public class MainActivity extends  AppCompatActivity implements
         MediaPlayer.OnCompletionListener
 {
-    private static final int REQUEST_SONG = 0;
+    private static final int REQUEST_GESTURES = 0;
     private static final int REQUEST_SPEAK = 0;
+    private static final int REQUEST_SONG = 0;
 
     // Song List
     private ArrayList<Song> songList;
@@ -71,7 +74,7 @@ public class MainActivity extends  AppCompatActivity implements
     // Media Player
     private MediaPlayer player;
     private boolean isPlaying = false;
-    private boolean isFav=false;
+    private boolean isFav = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -80,7 +83,6 @@ public class MainActivity extends  AppCompatActivity implements
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
 
         songList = new ArrayList();
         typeOfList = new TypeToken<List<Song>>(){}.getType();
@@ -96,11 +98,12 @@ public class MainActivity extends  AppCompatActivity implements
         songArtistTextView = findViewById(R.id.songArtistTextView);
         ivAlbum = findViewById(R.id.ivAlbum);
 
-        Button songsButton = findViewById(R.id.songsButton);
-        songsButton.setOnClickListener(new View.OnClickListener() {
+        // Buttons
+        Button gesturesButton = findViewById(R.id.gesturesButton);
+        gesturesButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                songsButtonOnClick();
+            public void onClick(View view) {
+                gesturesButtonOnClick();
             }
         });
 
@@ -112,8 +115,16 @@ public class MainActivity extends  AppCompatActivity implements
             }
         });
 
+        Button songsButton = findViewById(R.id.songsButton);
+        songsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                songsButtonOnClick();
+            }
+        });
+
         // Gesture Detector
-        mDetector = new GestureDetectorCompat(this, new MyGestureListener());
+        mDetector = new GestureDetectorCompat(this, new MyGestureDetector());
     }
 
     // Gesture Detector
@@ -122,9 +133,35 @@ public class MainActivity extends  AppCompatActivity implements
         this.mDetector.onTouchEvent(event);
         return super.onTouchEvent(event);
     }
-    class MyGestureListener extends GestureDetector.SimpleOnGestureListener {
+    class MyGestureDetector extends GestureDetector.SimpleOnGestureListener {
         private static final String DEBUG_TAG = "Gestures";
+        @Override
+        public boolean onDoubleTap(MotionEvent event) {
+            Display mdisp = getWindowManager().getDefaultDisplay();
+            Point mdispSize = new Point();
+            mdisp.getSize(mdispSize);
+            int maxX = mdispSize.x;
 
+            float x = event.getX();
+            if (x > maxX/2) { // Right Side of Screen
+                Toast.makeText(MainActivity.this, "+10s", Toast.LENGTH_LONG).show();
+                int pos = player.getCurrentPosition();
+                pos += 10000; // milliseconds
+                player.seekTo(pos);
+            }
+            else {
+                Toast.makeText(MainActivity.this, "-10s", Toast.LENGTH_LONG).show();
+                int pos = player.getCurrentPosition();
+                if (pos - 10000 < 0) {
+                    pos = 0;
+                }
+                else {
+                    pos -= 10000; // milliseconds
+                }
+                player.seekTo(pos);
+            }
+            return true;
+        }
         @Override
         public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY)
         {
@@ -195,7 +232,7 @@ public class MainActivity extends  AppCompatActivity implements
         @Override
         public boolean onSingleTapConfirmed(MotionEvent event)
         {
-            if (songList.size()==0){
+            if (songList.size() == 0) {
                 Toast.makeText(MainActivity.this, "Empty song list...", Toast.LENGTH_LONG).show();
                 return false;
             }
@@ -215,6 +252,7 @@ public class MainActivity extends  AppCompatActivity implements
         }
     }
 
+    // Media Player
     // get song list from SharePreferences
     private void getFavorites() {
         songList.clear();
@@ -231,8 +269,8 @@ public class MainActivity extends  AppCompatActivity implements
         ContentResolver musicResolver = getContentResolver();
         Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, MediaStore.Audio.Media.TITLE);
-        if(musicCursor!=null && musicCursor.moveToFirst()) {
-            //get columns
+        if (musicCursor != null && musicCursor.moveToFirst()) {
+            // get columns
             int titleColumn = musicCursor.getColumnIndex
                     (android.provider.MediaStore.Audio.Media.TITLE);
             int idColumn = musicCursor.getColumnIndex
@@ -241,7 +279,7 @@ public class MainActivity extends  AppCompatActivity implements
                     (android.provider.MediaStore.Audio.Media.ARTIST);
             int albumIdColumn = musicCursor.getColumnIndex
                     (MediaStore.Audio.Media.ALBUM_ID);
-            //add songs to list
+            // add songs to list
             do {
                 long thisId = musicCursor.getLong(idColumn);
                 String thisTitle = musicCursor.getString(titleColumn);
@@ -250,6 +288,15 @@ public class MainActivity extends  AppCompatActivity implements
                 songList.add(new Song(thisId, thisTitle, thisArtist,thisAlbumId));
             } while (musicCursor.moveToNext());
         }
+    }
+
+    // Buttons
+    // gestures button
+    private void gesturesButtonOnClick() {
+        Intent intent = new Intent (this, GesturesActivity.class);
+        String songListJson = new Gson().toJson(songList, typeOfList);
+        intent.putExtra("songListJson",songListJson);
+        startActivityForResult(intent, REQUEST_GESTURES);
     }
 
     // songs button
@@ -262,7 +309,7 @@ public class MainActivity extends  AppCompatActivity implements
     }
 
     // speak button
-    private void speakButtonOnClick(){
+    private void speakButtonOnClick() {
         Intent intent = new Intent (this, SpeakActivity.class);
         startActivityForResult(intent, REQUEST_SPEAK);
     }
@@ -270,10 +317,10 @@ public class MainActivity extends  AppCompatActivity implements
     // return song's position from Song Activity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == RESULT_OK){
-            if (requestCode == REQUEST_SONG){
+        if (resultCode == RESULT_OK) {
+            if (requestCode == REQUEST_SONG) {
                 songCurrent = data.getIntExtra("position",0);
-                Log.d(DEBUG_TAG, "pos:"+songCurrent);
+                Log.d(DEBUG_TAG, "pos:" + songCurrent);
                 setShowSong();
             }
         }
@@ -327,7 +374,7 @@ public class MainActivity extends  AppCompatActivity implements
         editor.apply();
     }
 
-    //connect to the service
+    // connect to the service
     private ServiceConnection musicConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -352,7 +399,7 @@ public class MainActivity extends  AppCompatActivity implements
     @Override
     protected void onStart() {
         super.onStart();
-        if(playIntent==null){
+        if (playIntent == null) {
             playIntent = new Intent(this, MusicService.class);
             bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
             startService(playIntent);
@@ -362,7 +409,7 @@ public class MainActivity extends  AppCompatActivity implements
     @Override
     protected void onDestroy() {
         stopService(playIntent);
-        musicSrv=null;
+        musicSrv = null;
         super.onDestroy();
     }
 
@@ -408,9 +455,7 @@ public class MainActivity extends  AppCompatActivity implements
 
     @Override
     public void onCompletion(MediaPlayer mediaPlayer) {
-        songCurrent = songCurrent==songList.size()-1?0:songCurrent+1;
+        songCurrent = songCurrent == songList.size() - 1 ? 0 : songCurrent+1;
         setShowSong();
     }
-
-
 }
