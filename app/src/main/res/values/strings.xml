@@ -10,4 +10,5 @@
     <string name="action_fav">favorites</string>
     <string name="todo">TODO</string>
     <string name="speak">Speak</string>
+    <string name="resetButtonString">Reset</string>
 </resources>
