@@ -61,7 +61,7 @@ public class MainActivity extends  AppCompatActivity implements
     private SharedPreferences favorites;
 
     // MusicService
-    private MusicService musicSrv;
+    public static MusicService musicSrv;
     private Intent playIntent;
     private boolean musicBound = false;
 
