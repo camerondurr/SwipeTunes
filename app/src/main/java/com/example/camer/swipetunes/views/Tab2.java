@@ -7,6 +7,8 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
 
 import com.example.camer.swipetunes.R;
 
@@ -18,6 +20,10 @@ public class Tab2 extends Fragment {
     private String mParam2;
 
     private OnFragmentInteractionListener mListener;
+
+    private DrawingView drawView;
+    private String gestureName = "Next Song";
+    private boolean isRecording = false;
 
     public Tab2() {
 
@@ -43,7 +49,38 @@ public class Tab2 extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_tab2, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_tab2, container, false);
+
+        drawView = rootView.findViewById(R.id.drawing);
+
+        ImageView recordButtonImageView = rootView.findViewById(R.id.recordButtonImageView);
+        Button resetButton = rootView.findViewById(R.id.resetButton);
+        ImageView confirmButtonImageView = rootView.findViewById(R.id.confirmButtonImageView);
+
+        recordButtonImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                isRecording = true;
+
+            }
+        });
+        resetButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                isRecording = false;
+                drawView.clear();
+            }
+        });
+        confirmButtonImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                isRecording = false;
+                drawView.addGesture(gestureName);
+                drawView.clear();
+            }
+        });
+
+        return rootView;
     }
 
     public void onButtonPressed(Uri uri) {

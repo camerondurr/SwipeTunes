@@ -55,19 +55,15 @@ public class Tab1 extends Fragment {
             @Override
             public void onClick(View v) {
                 isRecording = false;
-
                 drawView.clear();
-
             }
         });
         confirmButtonImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 isRecording = false;
-
                 drawView.addGesture(gestureName);
                 drawView.clear();
-                
             }
         });
 
@@ -76,15 +72,6 @@ public class Tab1 extends Fragment {
 
     public Tab1() {
         // Required empty public constructor
-    }
-
-    public static Tab1 newInstance(String param1, String param2) {
-        Tab1 fragment = new Tab1();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
     }
 
     // TODO: Rename method, update argument and hook method into UI event

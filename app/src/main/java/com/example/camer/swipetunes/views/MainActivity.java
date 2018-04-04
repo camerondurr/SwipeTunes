@@ -63,7 +63,6 @@ public class MainActivity extends  AppCompatActivity implements
     // MusicService
     public static MusicService musicSrv;
     private Intent playIntent;
-    private boolean musicBound = false;
 
     // GestureDetector
     private static final String DEBUG_TAG = "Gestures";
@@ -379,11 +378,10 @@ public class MainActivity extends  AppCompatActivity implements
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             MusicService.MusicBinder binder = (MusicService.MusicBinder)service;
-            //get service
+            // get service
             musicSrv = binder.getService();
-            //pass list
+            // pass list
             musicSrv.setList(songList);
-            musicBound = true;
             player = musicSrv.getPlayer();
             player.setOnCompletionListener(MainActivity.this);
             if (!songList.isEmpty())
@@ -392,7 +390,7 @@ public class MainActivity extends  AppCompatActivity implements
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            musicBound = false;
+
         }
     };
 
