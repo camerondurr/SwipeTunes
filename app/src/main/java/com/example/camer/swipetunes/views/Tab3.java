@@ -13,39 +13,15 @@ import android.widget.ImageView;
 import com.example.camer.swipetunes.R;
 
 public class Tab3 extends Fragment {
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-
-    private String mParam1;
-    private String mParam2;
-
     private OnFragmentInteractionListener mListener;
 
     private DrawingView drawView;
     private String gestureName = "Previous Song";
     private boolean isRecording = false;
 
-    public Tab3() {
-
-    }
-
-    public static Tab3 newInstance(String param1, String param2) {
-        Tab3 fragment = new Tab3();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
@@ -61,6 +37,7 @@ public class Tab3 extends Fragment {
         recordButtonImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                GesturesActivity.customPager.setPagingEnabled(false);
                 isRecording = true;
 
             }
@@ -68,6 +45,7 @@ public class Tab3 extends Fragment {
         resetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                GesturesActivity.customPager.setPagingEnabled(true);
                 isRecording = false;
                 drawView.clear();
             }
@@ -75,6 +53,7 @@ public class Tab3 extends Fragment {
         confirmButtonImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                GesturesActivity.customPager.setPagingEnabled(true);
                 isRecording = false;
                 drawView.addGesture(gestureName);
                 drawView.clear();
@@ -96,9 +75,9 @@ public class Tab3 extends Fragment {
         super.onAttach(context);
         if (context instanceof OnFragmentInteractionListener) {
             mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
+        }
+        else {
+            throw new RuntimeException(context.toString() + " must implement OnFragmentInteractionListener");
         }
     }
 
@@ -109,7 +88,6 @@ public class Tab3 extends Fragment {
     }
 
     public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
 }

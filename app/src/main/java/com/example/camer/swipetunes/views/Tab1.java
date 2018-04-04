@@ -13,12 +13,6 @@ import android.widget.ImageView;
 import com.example.camer.swipetunes.R;
 
 public class Tab1 extends Fragment {
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    private String mParam1;
-    private String mParam2;
-
     private OnFragmentInteractionListener mListener;
 
     private DrawingView drawView;
@@ -28,10 +22,6 @@ public class Tab1 extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
@@ -47,6 +37,7 @@ public class Tab1 extends Fragment {
         recordButtonImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                GesturesActivity.customPager.setPagingEnabled(false);
                 isRecording = true;
 
             }
@@ -54,6 +45,7 @@ public class Tab1 extends Fragment {
         resetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                GesturesActivity.customPager.setPagingEnabled(true);
                 isRecording = false;
                 drawView.clear();
             }
@@ -61,6 +53,7 @@ public class Tab1 extends Fragment {
         confirmButtonImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                GesturesActivity.customPager.setPagingEnabled(true);
                 isRecording = false;
                 drawView.addGesture(gestureName);
                 drawView.clear();
@@ -70,11 +63,6 @@ public class Tab1 extends Fragment {
         return rootView;
     }
 
-    public Tab1() {
-        // Required empty public constructor
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
             mListener.onFragmentInteraction(uri);

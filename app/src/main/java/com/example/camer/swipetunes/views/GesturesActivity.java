@@ -14,6 +14,8 @@ public class GesturesActivity extends AppCompatActivity implements
         Tab3.OnFragmentInteractionListener,
         Tab4.OnFragmentInteractionListener,
         Tab5.OnFragmentInteractionListener {
+    public static CustomPager customPager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,15 +29,15 @@ public class GesturesActivity extends AppCompatActivity implements
         tabLayout.addTab(tabLayout.newTab().setText("Remove Song"));
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
-        final ViewPager viewPager = (ViewPager) findViewById(R.id.myViewPager);
+        customPager = findViewById(R.id.myViewPager);
         final PagerAdapter adapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount());
-        viewPager.setAdapter(adapter);
+        customPager.setAdapter(adapter);
 
-        viewPager.setOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+        customPager.setOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                viewPager.setCurrentItem(tab.getPosition());
+                customPager.setCurrentItem(tab.getPosition());
             }
 
             @Override
